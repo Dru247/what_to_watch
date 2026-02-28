@@ -13,3 +13,20 @@ class Opinion(db.Model):
     source = db.Column(db.String(256))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     added_by = db.Column(db.String(64))
+
+    def to_dict(self) -> dict:
+        """Возвращает словарь с данными о мнении."""
+        return dict(
+            id=self.id,
+            title=self.title,
+            text=self.text,
+            source=self.source,
+            timestamp=self.timestamp,
+            added_by=self.added_by
+        )
+
+    def from_dict(self, data: dict) -> None:
+        """Создаёт атрибуты по данным."""
+        for field in ('title', 'text', 'source', 'added_by'):
+            if field in data:
+                setattr(self, field, data[field])

@@ -8,17 +8,23 @@ from .forms import OpinionForm
 from .models import Opinion
 
 
+def random_opinion() -> Opinion:
+    quantity = Opinion.query.count()
+    if quantity:
+        # Выбирает случайное число в диапазоне от 0 до quantity
+        offset_value = randrange(quantity)
+        opinion = Opinion.query.offset(offset_value).first()
+        return opinion
+
+
 @app.route('/')
 def index_view():
     """Главная страница."""
-    quantity = Opinion.query.count()
+    opinion = random_opinion()
 
-    if not quantity:
+    if opinion is None:
         abort(500)
 
-    # Выбирает случайное число в диапазоне от 0 до quantity
-    offset_value = randrange(quantity)
-    opinion = Opinion.query.offset(offset_value).first()
     return render_template('opinion.html', opinion=opinion)
 
 

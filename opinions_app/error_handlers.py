@@ -1,7 +1,30 @@
 """Обработчики ошибок."""
-from flask import render_template
+from flask import jsonify, render_template
 
 from opinions_app import app, db
+
+
+class InvalidAPIUsage(Exception):
+    """Кастомное исключение API."""
+
+    status_code = 400
+
+    def __init__(self, message, status_code=None):
+        """Конструктор класса."""
+        super().__init__()
+        self.message = message
+        if status_code is not None:
+            self.status_code = status_code
+
+    def to_dict(self):
+        """Преобразование ошибки в словарь."""
+        return dict(message=self.message)
+
+
+@app.errorhandler(InvalidAPIUsage)
+def invalid_api_usage(error):
+    """Обработчик кастомного исключения API."""
+    return jsonify(error.to_dict()), error.status_code
 
 
 @app.errorhandler(404)
