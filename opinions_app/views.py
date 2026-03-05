@@ -4,7 +4,7 @@ from random import randrange
 from flask import abort, flash, redirect, render_template, url_for
 
 from opinions_app import app, db
-from .dropbox import upload_files_to_dropbox
+from .dropbox import async_upload_files_to_dropbox
 from .forms import OpinionForm
 from .models import Opinion
 
@@ -30,7 +30,7 @@ def index_view():
 
 
 @app.route('/add', methods=['GET', 'POST'])
-def add_opinion_view():
+async def add_opinion_view():
     """Страница добавления мнения."""
     form = OpinionForm()
     if form.validate_on_submit():
@@ -38,7 +38,7 @@ def add_opinion_view():
         if Opinion.query.filter_by(text=text).first() is not None:
             flash('Такое мнение уже было оставлено ранее!')
             return render_template('add_opinion.html', form=form)
-        urls = upload_files_to_dropbox(form.images.data)
+        urls = await async_upload_files_to_dropbox(form.images.data)
         opinion = Opinion(
             title=form.title.data,
             text=form.text.data,
