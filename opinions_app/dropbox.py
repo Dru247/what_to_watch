@@ -44,11 +44,13 @@ SHARING_LINK = (
 #             )
 #             data = response.json()
 #             if 'url' not in data:
-#                 # Обходной манёвр на случай, 
+#                 # Обходной манёвр на случай,
 #                 # если пользователь попытается отправить
 #                 # один и тот же файл дважды. Ему вернётся
 #                 # ссылка на уже существующий файл.
-#                 data = data['error']['shared_link_already_exists']['metadata']
+#                 data = (
+#                     data['error']['shared_link_already_exists']['metadata']
+#                 )
 #             url = data['url']
 #             # Заменить режим работы ссылки,
 #             # чтобы получить ссылку на скачивание.
@@ -68,8 +70,8 @@ async def upload_file_and_get_url(
     dropbox_args = json.dumps({
         'autorename': True,
         'mode': 'add',
-        'path': f'/{image.filename}'
-    })
+        'path': f'/{image.filename}',
+    })   
     # Асинхронная загрузка в aiohttp выполняется
     # с помощью асинхронного контекстного менеджера.
     async with session.post(
@@ -85,12 +87,11 @@ async def upload_file_and_get_url(
         # ключевым словом await.
         data = await response.json()
         path = data['path_lower']
-
     async with session.post(
         SHARING_LINK,
         headers={
             'Authorization': AUTH_HEADER,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
         },
         json={'path': path}
     ) as response:
@@ -99,25 +100,24 @@ async def upload_file_and_get_url(
             data = data['error']['shared_link_already_exists']['metadata']
         url = data['url']
         url = url.replace('&dl=0', '&raw=1')
-
     return url
 
 
 async def async_upload_files_to_dropbox(images) -> List[str]:
     """Создаёт задачи загрузки фото и запускает их асинхронно."""
     if images is not None:
-        # Список асинхронных задач.
+        # Создать пустой список для асинхронных задач.
         tasks = []
-        # Инициализация единой сессии.
+        # Инициализировать единую сессию для работы с aiohttp.
         async with aiohttp.ClientSession() as session:
             for image in images:
-                # Для каждого изображения создаём асинхронную задачу.
+                # Для каждого изображения создать асинхронную задачу.
                 tasks.append(
                     asyncio.ensure_future(
-                        # передаём в асинхронную функцию сессию и изображение.
+                        # Передать в асинхронную функцию сессию и изображение.
                         upload_file_and_get_url(session, image)
                     )
                 )
-            # После создания всех функций, запускаем их.
+            # После того, как все задачи созданы, запустить их на выполнение.
             urls = await asyncio.gather(*tasks)
         return urls
